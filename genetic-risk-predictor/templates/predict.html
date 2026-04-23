@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>New Prediction — GeneticRisk Predictor</title>
+  <meta name="description" content="Enter your health and genetic indicators to receive your personalised disease risk assessment."/>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"/>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧬</text></svg>"/>
+</head>
+<body>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <div class="flash-messages">
+      {% for category, message in messages %}
+        <div class="flash flash-{{ category }}">{{ message }}</div>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endwith %}
+
+<nav class="navbar">
+  <div class="navbar-inner">
+    <a href="/" class="navbar-brand">🧬 GeneticRisk <span>Predictor</span></a>
+    <ul class="nav-links">
+      <li><a href="/">Home</a></li>
+      <li><a href="/predict" class="active">New Prediction</a></li>
+      <li><a href="/history">History</a></li>
+      <li><a href="/predict" class="nav-cta">Start Assessment →</a></li>
+    </ul>
+  </div>
+</nav>
+
+<main class="form-page">
+  <div class="container fade-in">
+
+    <!-- Page heading -->
+    <div style="margin-bottom:28px">
+      <a href="/" style="color:var(--text-muted);font-size:.87rem;display:inline-flex;align-items:center;gap:6px;margin-bottom:12px">← Back to Home</a>
+      <h1 style="font-family:'Outfit',sans-serif;font-size:1.9rem;font-weight:700">Risk Assessment Form</h1>
+      <p style="color:var(--text-secondary)">Complete all fields for the most accurate prediction result.</p>
+    </div>
+
+    <!-- Step bar -->
+    <div class="step-bar" style="margin-bottom:28px">
+      <div class="step active">
+        <div class="step-dot">1</div>
+        <span>Personal Info</span>
+      </div>
+      <div class="step-line"></div>
+      <div class="step active">
+        <div class="step-dot">2</div>
+        <span>Clinical Data</span>
+      </div>
+      <div class="step-line"></div>
+      <div class="step active">
+        <div class="step-dot">3</div>
+        <span>Lifestyle &amp; Genetics</span>
+      </div>
+    </div>
+
+    <!-- Server-side errors -->
+    {% if errors %}
+    <div class="alert alert-error" id="server-errors">
+      <span>⚠️</span>
+      <div>
+        <strong>Please correct the following errors:</strong>
+        <ul>
+          {% for e in errors %}<li>{{ e }}</li>{% endfor %}
+        </ul>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Form card -->
+    <div class="form-card">
+      <div class="form-header">
+        <h1>🩺 Patient Health Profile</h1>
+        <p>All data is processed locally and stored in your database only.</p>
+      </div>
+
+      <form id="predict-form" action="/predict" method="POST" novalidate>
+        <div class="form-body">
+
+          <!-- Section 1: Personal -->
+          <div class="form-section">
+            <div class="form-section-title">👤 Personal Information</div>
+            <div class="form-grid">
+              <div class="form-group" style="grid-column:1/-1">
+                <label class="form-label" for="patient_name">Patient Name <span>*</span></label>
+                <input class="form-control" type="text" id="patient_name" name="patient_name"
+                       placeholder="Enter full name" maxlength="100"
+                       value="{{ form_data.get('patient_name','') }}" required/>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="age">Age (years) <span>*</span></label>
+                <input class="form-control" type="number" id="age" name="age"
+                       placeholder="e.g. 45" min="1" max="120"
+                       value="{{ form_data.get('age','') }}" required/>
+                <span class="form-hint">Range: 1 – 120</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 2: Clinical -->
+          <div class="form-section">
+            <div class="form-section-title">🏥 Clinical Measurements</div>
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="form-label" for="bmi">BMI <span>*</span></label>
+                <input class="form-control" type="number" id="bmi" name="bmi"
+                       placeholder="e.g. 24.5" step="0.1" min="10" max="70"
+                       value="{{ form_data.get('bmi','') }}" required/>
+                <div id="bmi-badge" class="bmi-badge" style="display:none">—</div>
+                <span class="form-hint">Body Mass Index · Range: 10 – 70</span>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="blood_pressure">Blood Pressure (mmHg) <span>*</span></label>
+                <input class="form-control" type="number" id="blood_pressure" name="blood_pressure"
+                       placeholder="e.g. 120" min="40" max="300"
+                       value="{{ form_data.get('blood_pressure','') }}" required/>
+                <span class="form-hint">Systolic · Range: 40 – 300</span>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="cholesterol">Cholesterol (mg/dL) <span>*</span></label>
+                <input class="form-control" type="number" id="cholesterol" name="cholesterol"
+                       placeholder="e.g. 190" min="50" max="500"
+                       value="{{ form_data.get('cholesterol','') }}" required/>
+                <span class="form-hint">Total cholesterol · Range: 50 – 500</span>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="glucose">Glucose (mg/dL) <span>*</span></label>
+                <input class="form-control" type="number" id="glucose" name="glucose"
+                       placeholder="e.g. 90" min="40" max="600"
+                       value="{{ form_data.get('glucose','') }}" required/>
+                <span class="form-hint">Fasting blood glucose · Range: 40 – 600</span>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="physical_activity">Physical Activity (hrs/week) <span>*</span></label>
+                <input class="form-control" type="number" id="physical_activity" name="physical_activity"
+                       placeholder="e.g. 3" min="0" max="168"
+                       value="{{ form_data.get('physical_activity','') }}" required/>
+                <span class="form-hint">Hours of exercise per week · Range: 0 – 168</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 3: Lifestyle -->
+          <div class="form-section">
+            <div class="form-section-title">🌿 Lifestyle Factors</div>
+            <div class="toggle-group">
+              {% set lifestyle = [
+                ('smoking','smoking','🚬','Smoking','Current tobacco user'),
+                ('family_history','family_history','👪','Family History','1st-degree relative with disease'),
+                ('alcohol_use','alcohol_use','🍷','Alcohol Use','Regular alcohol consumption'),
+              ] %}
+              {% for fid, fname, icon, label, hint in lifestyle %}
+              <label class="toggle-item {% if form_data.get(fname) in ('1','on') %}checked{% endif %}" for="{{ fid }}">
+                <input type="checkbox" id="{{ fid }}" name="{{ fname }}" value="1"
+                       {% if form_data.get(fname) in ('1','on') %}checked{% endif %}/>
+                <div>
+                  <div style="font-weight:600;font-size:.9rem">{{ icon }} {{ label }}</div>
+                  <div style="font-size:.78rem;color:var(--text-muted)">{{ hint }}</div>
+                </div>
+              </label>
+              {% endfor %}
+            </div>
+          </div>
+
+          <!-- Section 4: Genetic Markers -->
+          <div class="form-section">
+            <div class="form-section-title">🧬 Genetic Markers</div>
+            <p style="color:var(--text-secondary);font-size:.88rem;margin-bottom:16px">
+              Check each marker if a positive result was detected in genetic testing.
+            </p>
+            <div class="toggle-group">
+              {% for i in range(1,6) %}
+              {% set fname = 'genetic_marker_' ~ i %}
+              <label class="toggle-item {% if form_data.get(fname) in ('1','on') %}checked{% endif %}" for="{{ fname }}">
+                <input type="checkbox" id="{{ fname }}" name="{{ fname }}" value="1"
+                       {% if form_data.get(fname) in ('1','on') %}checked{% endif %}/>
+                <div>
+                  <div style="font-weight:600;font-size:.9rem">🧬 Marker {{ i }}</div>
+                  <div style="font-size:.78rem;color:var(--text-muted)">Genetic Marker {{ i }} positive</div>
+                </div>
+              </label>
+              {% endfor %}
+            </div>
+          </div>
+
+        </div><!-- /form-body -->
+
+        <div class="form-footer">
+          <div style="color:var(--text-muted);font-size:.82rem">
+            🔒 Data stored locally · Not shared externally
+          </div>
+          <div style="display:flex;gap:12px">
+            <a href="/" class="btn btn-outline" id="btn-cancel">Cancel</a>
+            <button type="submit" class="btn btn-primary" id="btn-submit">
+              🔬 Predict Risk →
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+
+  </div>
+</main>
+
+<footer class="footer">
+  <p>© 2025 <span>GeneticRisk Predictor</span> · Educational AI Tool · Not for Clinical Use</p>
+</footer>
+
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>GeneticRisk — AI-Powered Disease Risk Predictor</title>
+  <meta name="description" content="Predict your genetic disease risk using our AI-powered Logistic Regression model. Enter your health and genetic indicators for an instant risk assessment."/>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"/>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧬</text></svg>"/>
+</head>
+<body>
+
+<!-- Flash messages -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <div class="flash-messages">
+      {% for category, message in messages %}
+        <div class="flash flash-{{ category }}">{{ message }}</div>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endwith %}
+
+<!-- Navbar -->
+<nav class="navbar">
+  <div class="navbar-inner">
+    <a href="/" class="navbar-brand">🧬 GeneticRisk <span>Predictor</span></a>
+    <ul class="nav-links">
+      <li><a href="/" class="active">Home</a></li>
+      <li><a href="/predict">New Prediction</a></li>
+      <li><a href="/history">History</a></li>
+      <li><a href="/predict" class="nav-cta">Start Assessment →</a></li>
+    </ul>
+  </div>
+</nav>
+
+<!-- Hero -->
+<section class="hero section">
+  <div class="container fade-in">
+    <div class="hero-badge">🔬 Educational Medical AI Tool</div>
+    <h1 class="hero-title">
+      Predict Your<br/>
+      <span class="grad">Genetic Disease Risk</span><br/>
+      with AI Precision
+    </h1>
+    <p class="hero-sub">
+      Enter your health indicators and genetic markers. Our Logistic Regression model
+      analyses 14 features to calculate your personalised disease risk probability in seconds.
+    </p>
+    <div class="hero-actions">
+      <a href="/predict" class="btn btn-primary btn-lg" id="cta-predict">Start Risk Assessment →</a>
+      <a href="/history" class="btn btn-outline btn-lg" id="cta-history">View History</a>
+    </div>
+
+    <div class="hero-stats">
+      <div class="hero-stat">
+        <div class="hero-stat-value" data-count="{{ stats.total_predictions }}">0</div>
+        <div class="hero-stat-label">Predictions Made</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-value" data-count="14">0</div>
+        <div class="hero-stat-label">Health Indicators</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-value" data-count="3">0</div>
+        <div class="hero-stat-label">Risk Categories</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-value">ML</div>
+        <div class="hero-stat-label">Powered Engine</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Features -->
+<section class="section">
+  <div class="container">
+    <div class="text-center">
+      <h2 class="section-title">How It Works</h2>
+      <p class="section-sub">Three simple steps to your personalised risk report</p>
+    </div>
+    <div class="features-grid">
+      <div class="card fade-in-up" id="feature-input">
+        <div class="feature-icon">📋</div>
+        <div class="feature-title">1. Enter Your Data</div>
+        <p class="feature-desc">Fill in your demographic info, clinical measurements, lifestyle habits, and genetic marker presence.</p>
+      </div>
+      <div class="card fade-in-up" id="feature-predict">
+        <div class="feature-icon">🤖</div>
+        <div class="feature-title">2. AI Analysis</div>
+        <p class="feature-desc">Our Logistic Regression model, trained on 1,200 synthetic patient profiles, calculates your risk probability instantly.</p>
+      </div>
+      <div class="card fade-in-up" id="feature-result">
+        <div class="feature-icon">📊</div>
+        <div class="feature-title">3. Detailed Report</div>
+        <p class="feature-desc">Receive a risk level (Low/Medium/High), probability score, risk explanation, and personalised health advice.</p>
+      </div>
+      <div class="card fade-in-up" id="feature-history">
+        <div class="feature-icon">🗂️</div>
+        <div class="feature-title">4. Track Over Time</div>
+        <p class="feature-desc">All predictions are stored in the database so you can review historical assessments and monitor trends.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Indicators reference -->
+<section class="section">
+  <div class="container">
+    <div class="text-center">
+      <h2 class="section-title">Indicators We Analyse</h2>
+      <p class="section-sub">14 validated health and genetic features power the prediction</p>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+      <div class="card fade-in-up">
+        <div class="card-header">🏥 Clinical Measurements</div>
+        <ul style="list-style:none;display:flex;flex-direction:column;gap:10px">
+          {% for item in [('Age','Your current age in years'),('BMI','Body Mass Index (weight/height²)'),('Blood Pressure','Systolic blood pressure (mmHg)'),('Cholesterol','Total cholesterol (mg/dL)'),('Glucose','Fasting blood glucose (mg/dL)')] %}
+          <li style="display:flex;gap:12px;align-items:flex-start;padding:10px;background:rgba(255,255,255,.03);border-radius:8px">
+            <span style="color:var(--teal);font-size:.9rem;margin-top:2px">◆</span>
+            <div>
+              <div style="font-weight:600;font-size:.9rem">{{ item[0] }}</div>
+              <div style="color:var(--text-muted);font-size:.8rem">{{ item[1] }}</div>
+            </div>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+      <div class="card fade-in-up">
+        <div class="card-header">🧬 Lifestyle &amp; Genetic Markers</div>
+        <ul style="list-style:none;display:flex;flex-direction:column;gap:10px">
+          {% for item in [('Smoking','Current tobacco use','⚠️'),('Family History','First-degree relatives with disease','⚠️'),('Physical Activity','Weekly exercise hours','✅'),('Alcohol Use','Regular alcohol consumption','⚠️'),('Genetic Markers 1–5','Presence of risk-associated alleles','🧬')] %}
+          <li style="display:flex;gap:12px;align-items:flex-start;padding:10px;background:rgba(255,255,255,.03);border-radius:8px">
+            <span style="font-size:.9rem;margin-top:2px">{{ item[2] }}</span>
+            <div>
+              <div style="font-weight:600;font-size:.9rem">{{ item[0] }}</div>
+              <div style="color:var(--text-muted);font-size:.8rem">{{ item[1] }}</div>
+            </div>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Disclaimer -->
+<section class="section" style="padding-top:0">
+  <div class="container">
+    <div class="card" style="border-color:rgba(245,158,11,.3);background:rgba(245,158,11,.06)">
+      <div style="display:flex;gap:14px;align-items:flex-start">
+        <span style="font-size:1.5rem">⚠️</span>
+        <div>
+          <div style="font-weight:700;margin-bottom:6px;color:var(--risk-medium)">Educational Disclaimer</div>
+          <p style="color:var(--text-secondary);font-size:.9rem;line-height:1.7">
+            This tool is designed <strong>for educational purposes only</strong>. Predictions are generated by a
+            model trained on synthetic data and do not constitute medical advice. Always consult a qualified
+            healthcare professional for diagnosis, treatment, or any health-related decisions.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="footer">
+  <p>© 2025 <span>GeneticRisk Predictor</span> · Educational AI Tool · Not for Clinical Use</p>
+</footer>
+
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

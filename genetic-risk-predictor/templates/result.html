@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Risk Result — GeneticRisk Predictor</title>
+  <meta name="description" content="Your personalised genetic disease risk prediction result and health recommendations."/>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"/>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧬</text></svg>"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="navbar-inner">
+    <a href="/" class="navbar-brand">🧬 GeneticRisk <span>Predictor</span></a>
+    <ul class="nav-links">
+      <li><a href="/">Home</a></li>
+      <li><a href="/predict">New Prediction</a></li>
+      <li><a href="/history">History</a></li>
+      <li><a href="/predict" class="nav-cta">New Assessment →</a></li>
+    </ul>
+  </div>
+</nav>
+
+<main class="result-page {{ result.risk_color }}">
+  <div class="container fade-in">
+
+    <!-- Breadcrumb -->
+    <a href="/history" style="color:var(--text-muted);font-size:.87rem;display:inline-flex;align-items:center;gap:6px;margin-bottom:20px">← All Predictions</a>
+
+    <!-- Hero -->
+    <div class="result-hero">
+      <h1>{{ result.risk_icon }} Risk Assessment Result</h1>
+      <p>Patient: <strong>{{ record.patient_name }}</strong> · ID #{{ record.id }} · {{ record.created_at[:10] }}</p>
+    </div>
+
+    <!-- Gauge + level -->
+    <div style="display:flex;flex-direction:column;align-items:center;margin-bottom:40px">
+      <div class="gauge-wrap">
+        <canvas id="risk-gauge"
+                data-probability="{{ record.risk_probability }}"
+                data-level="{{ result.risk_level }}"
+                width="340" height="200"></canvas>
+        <div class="gauge-label">
+          <div class="pct">{{ result.percentage }}</div>
+          <div class="lvl">
+            <span class="risk-pill">{{ result.risk_icon }} {{ result.risk_level }} Risk</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Description + Advice -->
+    <div class="result-grid" style="margin-bottom:28px">
+      <div class="desc-card">
+        <h3>📋 Assessment Summary</h3>
+        <p>{{ result.description }}</p>
+        <div style="margin-top:16px;padding:12px;background:rgba(255,255,255,.04);border-radius:8px">
+          <div style="font-size:.8rem;color:var(--text-muted);margin-bottom:4px">Risk Probability Score</div>
+          <div style="font-size:1.6rem;font-weight:800">{{ result.percentage }}</div>
+          <div style="margin-top:8px;background:rgba(255,255,255,.06);border-radius:50px;height:8px;overflow:hidden">
+            <div style="height:100%;border-radius:50px;width:{{ (record.risk_probability * 100)|round(1) }}%;
+              background:{% if result.risk_level == 'Low' %}var(--risk-low){% elif result.risk_level == 'Medium' %}var(--risk-medium){% else %}var(--risk-high){% endif %};
+              transition:width 1.2s ease"></div>
+          </div>
+        </div>
+      </div>
+      <div class="desc-card">
+        <h3>💡 Health Recommendations</h3>
+        <ul class="advice-list">
+          {% for tip in result.advice %}
+          <li>{{ tip }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+
+    <!-- Input summary -->
+    <div class="input-summary">
+      <h3>📊 Input Summary — #{{ record.id }}</h3>
+      <div class="summary-grid">
+        <div class="summary-item">
+          <div class="summary-item-label">Patient Name</div>
+          <div class="summary-item-value">{{ record.patient_name }}</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-item-label">Age</div>
+          <div class="summary-item-value">{{ record.age }} yrs</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-item-label">BMI</div>
+          <div class="summary-item-value">{{ record.bmi }}</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-item-label">Blood Pressure</div>
+          <div class="summary-item-value">{{ record.blood_pressure }} mmHg</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-item-label">Cholesterol</div>
+          <div class="summary-item-value">{{ record.cholesterol }} mg/dL</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-item-label">Glucose</div>
+          <div class="summary-item-value">{{ record.glucose }} mg/dL</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-item-label">Smoking</div>
+          <div class="summary-item-value">{{ '✅ Yes' if record.smoking else '❌ No' }}</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-item-label">Family History</div>
+          <div class="summary-item-value">{{ '✅ Yes' if record.family_history else '❌ No' }}</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-item-label">Physical Activity</div>
+          <div class="summary-item-value">{{ record.physical_activity }} hrs/wk</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-item-label">Alcohol Use</div>
+          <div class="summary-item-value">{{ '✅ Yes' if record.alcohol_use else '❌ No' }}</div>
+        </div>
+        {% for i in range(1,6) %}
+        <div class="summary-item">
+          <div class="summary-item-label">Marker {{ i }}</div>
+          <div class="summary-item-value">{{ '🧬 Positive' if record['genetic_marker_' ~ i] else '— Negative' }}</div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Disclaimer -->
+    <div class="card" style="border-color:rgba(245,158,11,.25);background:rgba(245,158,11,.05);margin-bottom:24px">
+      <div style="display:flex;gap:12px;align-items:center">
+        <span>⚠️</span>
+        <p style="color:var(--text-secondary);font-size:.85rem;margin:0">
+          <strong>Educational tool only.</strong> This result is not a clinical diagnosis.
+          Consult a qualified healthcare professional before making any medical decisions.
+        </p>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="result-actions">
+      <a href="/predict" class="btn btn-primary" id="btn-new-assessment">🔬 New Assessment</a>
+      <a href="/history" class="btn btn-outline" id="btn-view-history">📋 View All History</a>
+      <button onclick="window.print()" class="btn btn-outline" id="btn-print">🖨️ Print Report</button>
+    </div>
+
+  </div>
+</main>
+
+<footer class="footer">
+  <p>© 2025 <span>GeneticRisk Predictor</span> · Educational AI Tool · Not for Clinical Use</p>
+</footer>
+
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
