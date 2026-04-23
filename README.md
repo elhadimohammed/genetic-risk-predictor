@@ -1,1 +1,0 @@
-# genetic-risk-predictor
